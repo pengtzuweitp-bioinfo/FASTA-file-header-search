@@ -7,7 +7,7 @@ def get_user_descriptions():
     descriptions = set() # used to store multiple items in a single variable
     print("Enter descriptions to search for (type 'done' when finished entering descriptions; type 'next' for next file search; type 'exit' to quit the search):")
     while True:
-        user_input = input("> ").strip()
+        user_input = input("> ").strip().lower()
         if user_input.lower() == 'done': 
             break
         if user_input.lower() == 'next': 
@@ -21,11 +21,11 @@ def get_user_descriptions():
     return descriptions
 
 def parse_fasta(filename):
-    """Parse a FASTA file using Biopython's SeqIO."""
+    """Parse a FASTA file using Biopython's SeqIO. (The update part)"""
     try:
         sequences = SeqIO.to_dict(SeqIO.parse(filename, "fasta"))
         # Convert SeqRecord objects to a dictionary of header and sequence
-        sequences = {record.id: str(record.seq) for record in sequences.values()}
+        sequences = {record.description: str(record.seq) for record in sequences.values()} # Make sure to use record.description instead of record.id, or it won't parse the entire header but stop at the space
         return sequences
     except FileNotFoundError:
         print(f"Error: The file '{filename}' was not found.\n")
@@ -40,7 +40,8 @@ def search_fasta(descriptions, sequences): # keys: header descriptions; values: 
     # Iterates through each key (header) and value (sequence) pair in the sequences dictionary
     for header, sequence in sequences.items(): 
         # Checks if every string in the user's descriptions list exists within the current header string
-        if all(desc in header for desc in descriptions):  
+        #if all(desc in header for desc in descriptions):
+        if all(desc in header.lower() for desc in descriptions):
             print(f"\n--- Match Found ---")
             print(f"Header: >{header}\n")
             print(f"Sequence: {sequence}\n")
@@ -50,8 +51,8 @@ def search_fasta(descriptions, sequences): # keys: header descriptions; values: 
     if found_count == 0:
         print("No sequences found matching the descriptions.")
 
-    print(f"{found_count} matches found\n") # Summarize the amount of matches were found
-
+    print(f"{found_count} matches found\n")
+    
 def save_results_to_file(filename, descriptions, sequences):
     """Save search results to file."""
     try:
